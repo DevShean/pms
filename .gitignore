@@ -1,4 +1,59 @@
-/vendor/
-/node_modules/
-.env
+# ===============================
+# PHP + Tailwind + Composer Project .gitignore
+# ===============================
+
+# OS / Editor junk files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
 *.log
+
+# Environment and credentials
+.env
+.env.*
+config.php
+config_local.php
+
+# Node dependencies (Tailwind, PostCSS, etc.)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Composer dependencies
+/vendor/
+composer.lock
+
+# Build and compiled assets
+/public/css/
+public/js/
+dist/
+build/
+*.min.css
+*.min.js
+
+# Cache and temp files
+*.cache
+*.tmp
+.cache/
+.tmp/
+storage/
+logs/
+*.pid
+
+# Uploaded user files (keep only if needed)
+uploads/
+!uploads/.gitkeep
+
+# System-specific
+*.bak
+*.swp
+*.swo
+*.orig
+
+# Miscellaneous
+*.zip
+*.tar.gz
+*.7z
