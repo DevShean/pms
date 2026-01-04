@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 02, 2025 at 04:25 AM
+-- Generation Time: Dec 31, 2025 at 06:39 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.5.0
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -36,13 +36,6 @@ CREATE TABLE `behavior_logs` (
   `behavior_rating` enum('Excellent','Good','Fair','Poor') DEFAULT 'Fair'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `behavior_logs`
---
-
-INSERT INTO `behavior_logs` (`log_id`, `inmate_id`, `staff_id`, `log_date`, `notes`, `behavior_rating`) VALUES
-(1, 2, 4, '2025-11-02', 'Very Good', 'Good');
-
 -- --------------------------------------------------------
 
 --
@@ -65,17 +58,6 @@ CREATE TABLE `incidents` (
   `incident_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `incidents`
---
-
-INSERT INTO `incidents` (`incident_id`, `inmate_id`, `staff_id`, `incident_type`, `severity_level`, `location`, `reported_by`, `witnesses`, `description`, `action_taken`, `status`, `remarks`, `incident_date`) VALUES
-(1, 2, 3, 'Other', 'Low', NULL, NULL, NULL, 'adsads', 'dasas', 'Under Investigation', NULL, '2025-11-02 10:48:00'),
-(2, 3, 3, 'Other', 'Low', NULL, NULL, NULL, 'asdadsad', 'adsasd', 'Under Investigation', NULL, '2025-11-02 02:13:00'),
-(3, 2, 3, 'Other', 'Low', NULL, NULL, NULL, 'dsada', 'ads', 'Under Investigation', NULL, '2025-11-02 11:13:00'),
-(4, 2, 3, 'Other', 'Low', NULL, NULL, NULL, 'dsada', 'ads', 'Under Investigation', NULL, '2025-11-02 11:13:00'),
-(5, 2, 3, 'Other', 'Low', NULL, NULL, NULL, 'dsad', 'adasd', 'Under Investigation', NULL, '2025-11-02 11:15:00');
-
 -- --------------------------------------------------------
 
 --
@@ -96,6 +78,42 @@ CREATE TABLE `inmates` (
   `release_date` date DEFAULT NULL,
   `status` enum('Active','Released','Transferred') DEFAULT 'Active',
   `photo_path` varchar(255) DEFAULT NULL,
+  `marital_status` varchar(50) DEFAULT NULL COMMENT 'Marital Status',
+  `place_of_birth` varchar(255) DEFAULT NULL COMMENT 'Place of Birth',
+  `height` varchar(50) DEFAULT NULL COMMENT 'Height (e.g., 5''10")',
+  `weight` varchar(50) DEFAULT NULL COMMENT 'Weight (e.g., 180 lbs)',
+  `hair_description` varchar(100) DEFAULT NULL COMMENT 'Hair color/description',
+  `complexion` varchar(100) DEFAULT NULL COMMENT 'Complexion description',
+  `eyes_description` varchar(100) DEFAULT NULL COMMENT 'Eye color/description',
+  `citizenship` varchar(100) DEFAULT NULL COMMENT 'Citizenship',
+  `religion` varchar(100) DEFAULT NULL COMMENT 'Religion',
+  `race` varchar(100) DEFAULT NULL COMMENT 'Race/Ethnicity',
+  `occupation` varchar(255) DEFAULT NULL COMMENT 'Previous occupation',
+  `no_of_children` int(11) DEFAULT NULL COMMENT 'Number of children',
+  `permanent_address` text DEFAULT NULL COMMENT 'Permanent address',
+  `provincial_address` text DEFAULT NULL COMMENT 'Provincial address',
+  `educational_attainment` varchar(100) DEFAULT NULL COMMENT 'Educational attainment',
+  `course` varchar(255) DEFAULT NULL COMMENT 'Course/Major studied',
+  `school_attended` varchar(255) DEFAULT NULL COMMENT 'School/University attended',
+  `father_name` varchar(255) DEFAULT NULL COMMENT 'Father''s full name',
+  `father_address` text DEFAULT NULL COMMENT 'Father''s address',
+  `mother_name` varchar(255) DEFAULT NULL COMMENT 'Mother''s full name',
+  `mother_address` text DEFAULT NULL COMMENT 'Mother''s address',
+  `wife_clw_name` varchar(255) DEFAULT NULL COMMENT 'Wife/Common-Law Wife name',
+  `wife_clw_address` text DEFAULT NULL COMMENT 'Wife/Common-Law Wife address',
+  `relative_name` varchar(255) DEFAULT NULL COMMENT 'Relative contact name',
+  `relative_address` text DEFAULT NULL COMMENT 'Relative contact address',
+  `contact_number` varchar(20) DEFAULT NULL COMMENT 'Contact Number',
+  `return_rate` varchar(100) DEFAULT NULL COMMENT 'Return Rate',
+  `date_time_received` datetime DEFAULT NULL COMMENT 'Date/Time Received',
+  `turned_over_by` varchar(255) DEFAULT NULL COMMENT 'Turned Over by',
+  `receiving_duty_officer` varchar(255) DEFAULT NULL COMMENT 'Receiving Duty Officer',
+  `offense_charged` text DEFAULT NULL COMMENT 'Offense/s Charged',
+  `criminal_case_number` varchar(255) DEFAULT NULL COMMENT 'Criminal Case No./s',
+  `case_court` varchar(255) DEFAULT NULL COMMENT 'Court',
+  `case_status` varchar(100) DEFAULT NULL COMMENT 'Case Status',
+  `prisoner_property` text DEFAULT NULL COMMENT 'Prisoner''s Property',
+  `property_receipt_number` varchar(255) DEFAULT NULL COMMENT 'Property Receipt No.',
   `height_cm` decimal(5,2) DEFAULT NULL,
   `weight_kg` decimal(5,2) DEFAULT NULL,
   `blood_type` enum('A','B','AB','O') DEFAULT NULL,
@@ -106,32 +124,6 @@ CREATE TABLE `inmates` (
   `emergency_contact_name` varchar(100) DEFAULT NULL,
   `emergency_contact_number` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `inmates`
---
-
-INSERT INTO `inmates` (`inmate_id`, `first_name`, `last_name`, `birthdate`, `gender`, `crime`, `sentence_years`, `court_details`, `cell_block`, `admission_date`, `release_date`, `status`, `photo_path`, `height_cm`, `weight_kg`, `blood_type`, `nationality`, `eye_color`, `hair_color`, `identifying_marks`, `emergency_contact_name`, `emergency_contact_number`) VALUES
-(1, 'John', 'Doe', '1988-04-12', 'Male', 'Robbery', 8, 'Manila Regional Court', 'A1', '2019-06-15', '2027-06-15', 'Active', '../../assets/uploads/images (7).jpg', 178.00, 80.00, '', 'Filipino', 'Brown', 'Black', 'Scar on right cheek', 'Maria Doe', '09171234567'),
-(2, 'Michael', 'Santos', '1992-11-03', 'Male', 'Drug Trafficking', 12, 'Quezon City Trial Court', 'C3', '2018-02-10', '2030-02-10', 'Active', '../../assets/uploads/images (6).jpg', 172.00, 76.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: dragon on left arm', 'Anna Santos', '09183456721'),
-(3, 'Carlos', 'Reyes', '1985-09-21', 'Male', 'Homicide', 20, 'Cebu City Court', 'A2', '2015-08-02', '2035-08-02', 'Active', '../../assets/uploads/images (5).jpg', 180.00, 85.00, '', 'Filipino', 'Dark Brown', 'Black', 'Burn mark on left forearm', 'Liza Reyes', '09184561234'),
-(4, 'Jose', 'Marquez', '1990-02-18', 'Male', 'Fraud', 6, 'Davao Regional Court', 'D1', '2021-09-09', '2027-09-09', 'Active', '../../assets/uploads/il_fullxfull.4064010196_szsr.webp', 170.00, 70.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: “Truth” on wrist', 'Elena Marquez', '09196784321'),
-(5, 'Peter', 'Lopez', '1995-12-22', 'Male', 'Assault', 5, 'Taguig Trial Court', 'E4', '2020-04-05', '2025-04-05', 'Active', '../../assets/uploads/images (4).jpg', 174.00, 78.00, '', 'Filipino', 'Hazel', 'Black', 'Scar on left eyebrow', 'Juan Lopez', '09172349876'),
-(6, 'Raymond', 'Chua', '1983-06-07', 'Male', 'Tax Evasion', 4, 'Makati City Court', 'F2', '2022-01-12', '2026-01-12', 'Active', '../../assets/uploads/images (3).jpg', 169.00, 68.00, '', 'Filipino-Chinese', 'Brown', 'Black', 'Mole on chin', 'Cynthia Chua', '09175671234'),
-(7, 'David', 'Lim', '1998-03-14', 'Male', 'Car Theft', 7, 'Pasig Court', 'C1', '2021-07-10', '2028-07-10', 'Active', '../../assets/uploads/images (2).jpg', 177.00, 82.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: skull on neck', 'Rebecca Lim', '09181239876'),
-(8, 'Allan', 'Garcia', '1989-05-19', 'Male', 'Kidnapping', 15, 'Cavite Regional Court', 'A1', '2016-11-20', '2031-11-20', 'Active', '../../assets/uploads/8500551855efb1dca1c3dca9c6df26d1.webp', 182.00, 88.00, '', 'Filipino', 'Dark Brown', 'Black', 'Scar on right hand', 'Rosa Garcia', '09188887766'),
-(9, 'Erwin', 'Torres', '1979-10-01', 'Male', 'Murder', 25, 'Baguio City Court', 'A3', '2012-03-12', '2037-03-12', 'Active', '../../assets/uploads/images (1).jpg', 176.00, 79.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: dagger on forearm', 'Mina Torres', '09174562345'),
-(10, 'Francis', 'Villanueva', '1993-07-23', 'Male', 'Cybercrime', 8, 'Manila Cyber Court', 'D2', '2020-05-18', '2028-05-18', 'Active', '../../assets/uploads/images.jpg', 171.00, 73.00, '', 'Filipino', 'Brown', 'Black', 'Wrist tattoo: binary code', 'Carla Villanueva', '09183455678'),
-(11, 'Samantha', 'Ramos', '1997-11-12', 'Female', 'Fraud', 5, 'Pasay City Court', 'E3', '2021-03-09', '2026-03-09', 'Active', '../../assets/uploads/download (2).jpg', 162.00, 58.00, '', 'Filipino', 'Brown', 'Black', 'Birthmark on neck', 'Miguel Ramos', '09187651234'),
-(12, 'Angela', 'Castro', '1984-09-30', 'Female', 'Drug Possession', 10, 'Mandaluyong Court', 'C4', '2019-01-14', '2029-01-14', 'Active', '../../assets/uploads/download (1).jpg', 165.00, 60.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: rose on shoulder', 'Rico Castro', '09192233445'),
-(13, 'Melissa', 'Tan', '1990-01-05', 'Female', 'Forgery', 6, 'Makati City Court', 'D3', '2020-10-20', '2026-10-20', 'Active', '../../assets/uploads/download.jpg', 160.00, 55.00, '', 'Filipino-Chinese', 'Brown', 'Black', 'Scar on left hand', 'Allan Tan', '09193344567'),
-(14, 'Patricia', 'Navarro', '1995-08-15', 'Female', 'Arson', 12, 'Iloilo Regional Court', 'B2', '2018-12-03', '2030-12-03', 'Active', '../../assets/uploads/1000_F_774545132_t5PCk1SoSbTEgUe2dfcW19lOYR2DD52m.jpg', 168.00, 63.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: phoenix on back', 'Carmen Navarro', '09194567890'),
-(15, 'Rosa', 'Jimenez', '1988-04-10', 'Female', 'Embezzlement', 9, 'Cebu City Court', 'D4', '2017-07-25', '2026-07-25', 'Active', '../../assets/uploads/prison-mugshot-of-black-woman-in-orange-jumpsuit-and-white-shirt-photo.jpg', 166.00, 59.00, '', 'Filipino', 'Brown', 'Black', 'Mole near lip', 'Lorenzo Jimenez', '09195553456'),
-(16, 'Liza', 'Fernandez', '1991-05-24', 'Female', 'Bribery', 4, 'Taguig City Court', 'E1', '2022-02-18', '2026-02-18', 'Active', '../../assets/uploads/ai-generated-prison-mugshot-of-middle-aged-african-american-woman-in-orange-jumpsuit-photo.jpg', 163.00, 57.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: heart on ankle', 'Arnel Fernandez', '09191234567'),
-(17, 'Catherine', 'Cruz', '1983-02-08', 'Female', 'Smuggling', 14, 'Manila Regional Court', 'B3', '2015-10-11', '2029-10-11', 'Active', '../../assets/uploads/images.jpg', 167.00, 61.00, '', 'Filipino', 'Brown', 'Black', 'Scar on right forearm', 'Marco Cruz', '09192223344'),
-(18, 'Veronica', 'Delos Reyes', '1987-09-11', 'Female', 'Extortion', 7, 'Cavite Trial Court', 'C2', '2020-08-05', '2027-08-05', 'Active', '../../assets/uploads/1000_F_728201850_8LmFfeLxLvAJDdpwEPMy6d4bvyDrmVdt.jpg', 164.00, 60.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: initials VDR', 'Paulo Delos Reyes', '09193331234'),
-(19, 'Janet', 'Santiago', '1999-06-19', 'Female', 'Theft', 3, 'Pasig City Court', 'E2', '2023-04-21', '2026-04-21', 'Active', '../../assets/uploads/1000_F_774541913_ehl9D1CI4XT5OtfWDPU4g9roSRi2Q6uf.jpg', 161.00, 54.00, '', 'Filipino', 'Brown', 'Black', 'Tattoo: butterfly on wrist', 'Jose Santiago', '09197778899'),
-(20, 'Maria', 'Valdez', '1978-03-27', 'Female', 'Murder', 20, 'Bacolod City Court', 'A4', '2010-05-16', '2030-05-16', 'Active', '../../assets/uploads/360_F_734957369_H2vRqAbeza7BkCRwj7IHd5oyCqPfAdIJ.jpg', 170.00, 65.00, '', 'Filipino', 'Dark Brown', 'Black', 'Scar on cheek', 'Daniel Valdez', '09191112222');
 
 -- --------------------------------------------------------
 
@@ -148,18 +140,6 @@ CREATE TABLE `inmate_programs` (
   `end_date` date DEFAULT NULL,
   `progress` enum('Ongoing','Completed','Dropped') DEFAULT 'Ongoing'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `inmate_programs`
---
-
-INSERT INTO `inmate_programs` (`inmate_program_id`, `inmate_id`, `program_id`, `staff_id`, `start_date`, `end_date`, `progress`) VALUES
-(1, 1, 1, 4, '2025-11-02', NULL, 'Ongoing'),
-(2, 2, 1, 4, '2025-11-02', NULL, 'Ongoing'),
-(3, 3, 1, 4, '2025-11-02', NULL, 'Ongoing'),
-(4, 6, 1, 1, '2025-11-03', NULL, 'Ongoing'),
-(5, 7, 1, 1, '2025-11-03', '2025-11-02', 'Completed'),
-(6, 8, 1, 1, '2025-11-03', '2025-11-02', 'Completed');
 
 -- --------------------------------------------------------
 
@@ -189,17 +169,6 @@ CREATE TABLE `medical_records` (
   `record_date` date DEFAULT curdate()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `medical_records`
---
-
-INSERT INTO `medical_records` (`record_id`, `inmate_id`, `staff_id`, `visit_type`, `diagnosis`, `vital_signs`, `blood_pressure`, `temperature_c`, `pulse_rate`, `respiratory_rate`, `treatment`, `medication`, `medical_condition`, `allergies`, `remarks`, `next_checkup_date`, `hospital_referred`, `attachment_path`, `record_date`) VALUES
-(1, 8, 2, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-01'),
-(2, 12, 2, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-01'),
-(3, 3, 2, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-01'),
-(4, 17, 2, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-01'),
-(5, 7, 5, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-01');
-
 -- --------------------------------------------------------
 
 --
@@ -215,14 +184,6 @@ CREATE TABLE `notifications` (
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`notification_id`, `user_id`, `title`, `message`, `type`, `is_read`, `created_at`) VALUES
-(1, 6, 'Visitation Request Sent', 'Your visitation request has been submitted and is pending approval.', 'visitation', 0, '2025-11-02 01:22:17'),
-(2, 6, 'Visitation Request Sent', 'Your visitation request has been submitted and is pending approval.', 'visitation', 0, '2025-11-02 01:32:03');
 
 -- --------------------------------------------------------
 
@@ -244,13 +205,6 @@ CREATE TABLE `programs` (
   `status` enum('Active','Inactive','Completed','Cancelled') DEFAULT 'Active',
   `requirements` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `programs`
---
-
-INSERT INTO `programs` (`program_id`, `program_name`, `program_type`, `description`, `start_date`, `end_date`, `duration_weeks`, `capacity`, `location`, `assigned_staff_id`, `status`, `requirements`) VALUES
-(1, 'Anger Management Workshop', 'Psychological', '', '2025-11-02', '2025-11-12', 2, 15, 'Tacloban City', 4, 'Active', 'ID');
 
 -- --------------------------------------------------------
 
@@ -304,15 +258,6 @@ CREATE TABLE `transfers` (
   `reason` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `transfers`
---
-
-INSERT INTO `transfers` (`transfer_id`, `inmate_id`, `from_block`, `to_block`, `transfer_date`, `approved_by`, `reason`) VALUES
-(1, 1, 'B1', 'A1', '2025-11-02', 1, 'dsadas'),
-(2, 1, 'B1', 'A1', '2025-11-02', 1, 'dsadas'),
-(3, 1, 'B1', 'A1', '2025-11-02', 1, 'dsadsa');
-
 -- --------------------------------------------------------
 
 --
@@ -337,8 +282,7 @@ INSERT INTO `users` (`user_id`, `role_id`, `full_name`, `email`, `password`, `cr
 (2, 3, 'Danna Villanueva', 'medical@pms.com', '$2y$10$TyZAUJBuyXDUO4by4SP/6uLiVaYEgVL9bZWuVk.SOHBprLBIk4pni', '2025-11-01 13:25:04'),
 (3, 2, 'Denise Claire Ocena Lledo', 'officer@pms.com', '$2y$10$.THnmryvdYajosxpnboMVuDJzsFprHaT1ds.TGxlkAA215ZI10qsa', '2025-11-01 13:25:29'),
 (4, 4, 'Quenyss Almaden', 'rehab@pms.com', '$2y$10$zrfU9ms5vW3jHmfrUXtPZeEqVEe0SQK6UteZ9cFT0OlElq5nrXGpS', '2025-11-01 13:25:59'),
-(5, 3, 'Elizabeth Baker', 'medical2@pms.com', '$2y$10$722YuvHsswQTeGC1sySQJuuNUsqY6Lho5HX22m.sdLc93iIvX94V.', '2025-11-01 13:32:02'),
-(6, 5, 'Dhina Lazaro', 'one@gmail.com', '$2y$10$UfRKT6KcGZ8i9jBXzlKJ8.WVLrNPJqQIKvPfJMStePgmFaAzWbIxm', '2025-11-02 01:21:39');
+(5, 3, 'Elizabeth Baker', 'medical2@pms.com', '$2y$10$722YuvHsswQTeGC1sySQJuuNUsqY6Lho5HX22m.sdLc93iIvX94V.', '2025-11-01 13:32:02');
 
 -- --------------------------------------------------------
 
@@ -354,16 +298,9 @@ CREATE TABLE `visitations` (
   `scheduled_date` datetime NOT NULL,
   `status` enum('Pending','Approved','Denied','Completed','Cancelled') DEFAULT 'Pending',
   `notes` text DEFAULT NULL,
-  `relationship` varchar(100) DEFAULT NULL
+  `relationship` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `visitations`
---
-
-INSERT INTO `visitations` (`visit_id`, `inmate_id`, `visitor_id`, `visit_type`, `scheduled_date`, `status`, `notes`, `relationship`) VALUES
-(1, 16, 1, 'Conjugal Visit', '2025-11-02 09:22:00', 'Approved', 'adsadsa', 'Family'),
-(2, 8, 1, 'Visit to the Inmate', '2025-11-02 09:31:00', 'Approved', 'dsada', 'Family');
 
 -- --------------------------------------------------------
 
@@ -376,13 +313,6 @@ CREATE TABLE `visitors` (
   `user_id` int(11) DEFAULT NULL,
   `relationship` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `visitors`
---
-
-INSERT INTO `visitors` (`visitor_id`, `user_id`, `relationship`) VALUES
-(1, 6, 'Family');
 
 --
 -- Indexes for dumped tables
@@ -523,7 +453,7 @@ ALTER TABLE `medical_records`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `programs`
@@ -559,7 +489,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `visitations`
 --
 ALTER TABLE `visitations`
-  MODIFY `visit_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `visit_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `visitors`

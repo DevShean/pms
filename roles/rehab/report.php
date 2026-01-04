@@ -12,6 +12,31 @@ if (isset($_POST['generate_report'])) {
     // CSV headers
     fputcsv($output, ['Inmate Name', 'Program Name', 'Start Date', 'End Date', 'Progress', 'Behavior Rating', 'Notes']);
 
+    // Build query with filters
+    $where_conditions = [];
+    
+    // Filter by date range
+    if (!empty($_POST['filter_start_date'])) {
+        $start_date = $conn->real_escape_string($_POST['filter_start_date']);
+        $where_conditions[] = "ip.start_date >= '$start_date'";
+    }
+    
+    if (!empty($_POST['filter_end_date'])) {
+        $end_date = $conn->real_escape_string($_POST['filter_end_date']);
+        $where_conditions[] = "(ip.end_date <= '$end_date' OR ip.end_date IS NULL)";
+    }
+    
+    // Filter by month
+    if (!empty($_POST['filter_month'])) {
+        $filter_month = $conn->real_escape_string($_POST['filter_month']);
+        $where_conditions[] = "DATE_FORMAT(ip.start_date, '%Y-%m') <= '$filter_month' AND (DATE_FORMAT(ip.end_date, '%Y-%m') >= '$filter_month' OR ip.end_date IS NULL)";
+    }
+    
+    $where_clause = '';
+    if (!empty($where_conditions)) {
+        $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
+    }
+
     // Fetch data
     $report_data = $conn->query("
         SELECT i.first_name, i.last_name, p.program_name, ip.start_date, ip.end_date, ip.progress, bl.behavior_rating, bl.notes
@@ -19,6 +44,7 @@ if (isset($_POST['generate_report'])) {
         INNER JOIN inmates i ON ip.inmate_id = i.inmate_id
         INNER JOIN programs p ON ip.program_id = p.program_id
         LEFT JOIN behavior_logs bl ON bl.inmate_id = i.inmate_id AND bl.log_date >= ip.start_date
+        $where_clause
         ORDER BY i.last_name, i.first_name, ip.start_date
     ");
 
@@ -41,6 +67,29 @@ if (isset($_POST['generate_report'])) {
 include '../../partials/header.php';
 include '../../partials/sidebar.php';
 
+// Build summary query with filters
+$summary_where_conditions = [];
+
+if (!empty($_POST['filter_start_date'])) {
+    $start_date = $conn->real_escape_string($_POST['filter_start_date']);
+    $summary_where_conditions[] = "ip.start_date >= '$start_date'";
+}
+
+if (!empty($_POST['filter_end_date'])) {
+    $end_date = $conn->real_escape_string($_POST['filter_end_date']);
+    $summary_where_conditions[] = "(ip.end_date <= '$end_date' OR ip.end_date IS NULL)";
+}
+
+if (!empty($_POST['filter_month'])) {
+    $filter_month = $conn->real_escape_string($_POST['filter_month']);
+    $summary_where_conditions[] = "DATE_FORMAT(ip.start_date, '%Y-%m') <= '$filter_month' AND (DATE_FORMAT(ip.end_date, '%Y-%m') >= '$filter_month' OR ip.end_date IS NULL)";
+}
+
+$summary_where_clause = '';
+if (!empty($summary_where_conditions)) {
+    $summary_where_clause = 'WHERE ' . implode(' AND ', $summary_where_conditions);
+}
+
 // Fetch summary data for display
 $summary = $conn->query("
     SELECT 
@@ -51,6 +100,7 @@ $summary = $conn->query("
         AVG(CASE WHEN bl.behavior_rating = 'Excellent' THEN 4 WHEN bl.behavior_rating = 'Good' THEN 3 WHEN bl.behavior_rating = 'Fair' THEN 2 WHEN bl.behavior_rating = 'Poor' THEN 1 END) as avg_behavior_rating
     FROM inmate_programs ip
     LEFT JOIN behavior_logs bl ON ip.inmate_id = bl.inmate_id
+    $summary_where_clause
 ");
 $summary_data = $summary->fetch_assoc();
 ?>
@@ -138,7 +188,48 @@ $summary_data = $summary->fetch_assoc();
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
             </div>
-            <div class="bg-slate-50 rounded-lg p-4 mb-6">
+
+            <!-- Filter Section -->
+            <form method="post" class="mb-6">
+                <div class="bg-slate-50 rounded-lg p-4 mb-4">
+                    <h3 class="text-sm font-semibold text-slate-800 mb-4">Filter Report By:</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Date Range Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Start Date</label>
+                            <input type="date" name="filter_start_date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" value="<?php echo htmlspecialchars($_POST['filter_start_date'] ?? ''); ?>">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">End Date</label>
+                            <input type="date" name="filter_end_date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" value="<?php echo htmlspecialchars($_POST['filter_end_date'] ?? ''); ?>">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Or Filter by Month</label>
+                            <input type="month" name="filter_month" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" value="<?php echo htmlspecialchars($_POST['filter_month'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Tip: Use Start/End dates for inclusive date range filtering, or use the Month filter for a specific month</p>
+                </div>
+
+                <div class="flex justify-between items-center gap-3">
+                    <div class="flex gap-3">
+                        <button type="submit" name="generate_report" class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Download CSV Report
+                        </button>
+                        <button type="button" onclick="document.querySelector('form').reset(); location.reload();" class="inline-flex items-center px-6 py-3 text-sm font-medium text-slate-700 bg-slate-200 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="bg-slate-50 rounded-lg p-4">
                 <div class="flex items-start space-x-3">
                     <svg class="w-5 h-5 text-slate-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -149,14 +240,6 @@ $summary_data = $summary->fetch_assoc();
                     </div>
                 </div>
             </div>
-            <form method="post" class="flex justify-start">
-                <button type="submit" name="generate_report" class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Download CSV Report
-                </button>
-            </form>
         </div>
     </div>
 </main>

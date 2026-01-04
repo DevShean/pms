@@ -4,11 +4,19 @@ require '../../config/config.php';
 include '../../partials/header.php';
 include '../../partials/sidebar.php';
 
+// Handle search
+$search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
+
 // Fetch all medical records with inmate details
-$sql = "SELECT mr.*, i.first_name, i.last_name
+$sql = "SELECT mr.*, i.first_name, i.last_name, i.inmate_id
         FROM medical_records mr
-        JOIN inmates i ON mr.inmate_id = i.inmate_id
-        ORDER BY mr.record_date DESC";
+        JOIN inmates i ON mr.inmate_id = i.inmate_id";
+
+if (!empty($search)) {
+    $sql .= " WHERE i.first_name LIKE '%$search%' OR i.last_name LIKE '%$search%' OR i.inmate_id LIKE '%$search%'";
+}
+
+$sql .= " ORDER BY mr.record_date DESC";
 $result = $conn->query($sql);
 ?>
 
@@ -18,6 +26,33 @@ $result = $conn->query($sql);
         <div class="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
             Medical Staff Portal - Read Only
         </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-6">
+        <form method="GET" class="flex gap-2">
+            <div class="flex-1 relative">
+                <input type="text" name="search" placeholder="Search by inmate name or ID..." 
+                    value="<?php echo htmlspecialchars($search); ?>"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm">
+                <svg class="absolute right-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                Search
+            </button>
+            <?php if (!empty($search)): ?>
+                <a href="inmates.php" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors font-medium">
+                    Clear
+                </a>
+            <?php endif; ?>
+        </form>
+        <?php if (!empty($search)): ?>
+            <p class="text-sm text-gray-600 mt-2">
+                Showing results for: <strong><?php echo htmlspecialchars($search); ?></strong>
+            </p>
+        <?php endif; ?>
     </div>
 
     <?php if ($result->num_rows > 0): ?>

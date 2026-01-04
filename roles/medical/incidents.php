@@ -29,9 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt_insert->close();
 }
 
-// Fetch all inmates for dropdown
-$sql_inmates = "SELECT inmate_id, first_name, last_name FROM inmates ORDER BY last_name, first_name";
-$result_inmates = $conn->query($sql_inmates);
+// (Inmate search will be handled via AJAX autocomplete)
 
 // Fetch all incidents
 $sql_incidents = "SELECT inc.*, i.first_name, i.last_name 
@@ -72,13 +70,10 @@ $result_incidents = $conn->query($sql_incidents);
             <form method="POST" action="" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="inmate_id" class="block text-sm font-medium text-slate-700 mb-2">Inmate</label>
-                        <select id="inmate_id" name="inmate_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" required>
-                            <option value="">Select Inmate</option>
-                            <?php while($inmate = $result_inmates->fetch_assoc()): ?>
-                                <option value="<?php echo $inmate['inmate_id']; ?>"><?php echo htmlspecialchars($inmate['last_name'] . ', ' . $inmate['first_name']); ?></option>
-                            <?php endwhile; ?>
-                        </select>
+                        <label for="inmate_search" class="block text-sm font-medium text-slate-700 mb-2">Inmate</label>
+                        <input type="text" id="inmate_search" name="inmate_search" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" placeholder="Search inmate by name" autocomplete="off" required>
+                        <input type="hidden" id="inmate_id" name="inmate_id">
+                        <div id="inmate_suggestions" class="relative"></div>
                     </div>
                     <div>
                         <label for="incident_date" class="block text-sm font-medium text-slate-700 mb-2">Incident Date</label>
@@ -154,6 +149,9 @@ $result_incidents = $conn->query($sql_incidents);
                     <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
+                </div>
+                <div class="mt-3">
+                    <input id="log_search" type="text" placeholder="Search incidents by inmate" class="w-1/3 px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -247,6 +245,101 @@ $result_incidents = $conn->query($sql_incidents);
         </div>
     </div>
 </main>
+
+<script>
+// Autocomplete for inmate search and incident log filtering
+(function(){
+    const inp = document.getElementById('inmate_search');
+    const hidden = document.getElementById('inmate_id');
+    const suggBox = document.getElementById('inmate_suggestions');
+    const form = inp ? inp.closest('form') : null;
+
+    function debounce(fn, wait){
+        let t;
+        return function(...args){
+            clearTimeout(t);
+            t = setTimeout(()=>fn.apply(this,args), wait);
+        }
+    }
+
+    function clearSuggestions(){
+        suggBox.innerHTML = '';
+    }
+
+    async function fetchSuggestions(q){
+        try{
+            const res = await fetch('ajax_request/search_inmates.php?q=' + encodeURIComponent(q));
+            if (!res.ok) return [];
+            return await res.json();
+        }catch(e){
+            return [];
+        }
+    }
+
+    function renderSuggestions(items){
+        clearSuggestions();
+        if (!items.length) return;
+        const list = document.createElement('div');
+        list.className = 'absolute bg-white border border-slate-200 rounded-md w-full mt-1 shadow z-50';
+        items.forEach(it => {
+            const el = document.createElement('div');
+            el.className = 'px-3 py-2 cursor-pointer hover:bg-slate-50 text-sm text-slate-700';
+            el.textContent = `${it.last_name}, ${it.first_name}`;
+            el.dataset.id = it.inmate_id;
+            el.addEventListener('click', ()=>{
+                inp.value = `${it.last_name}, ${it.first_name}`;
+                hidden.value = it.inmate_id;
+                clearSuggestions();
+            });
+            list.appendChild(el);
+        });
+        suggBox.appendChild(list);
+    }
+
+    if (inp){
+        inp.addEventListener('input', debounce(async function(e){
+            const q = this.value.trim();
+            hidden.value = '';
+            if (q.length < 2){ clearSuggestions(); return; }
+            const items = await fetchSuggestions(q);
+            renderSuggestions(items);
+        }, 250));
+
+        // hide suggestions when clicking outside
+        document.addEventListener('click', function(e){
+            if (!suggBox.contains(e.target) && e.target !== inp) clearSuggestions();
+        });
+
+        if (form){
+            form.addEventListener('submit', function(e){
+                if (!hidden.value){
+                    e.preventDefault();
+                    alert('Please select an inmate from the suggestions before submitting.');
+                    inp.focus();
+                }
+            });
+        }
+    }
+
+    // Incident log filtering
+    const logSearch = document.getElementById('log_search');
+    if (logSearch){
+        const table = document.querySelector('table.min-w-full');
+        const tbody = table ? table.querySelector('tbody') : null;
+        logSearch.addEventListener('input', debounce(function(){
+            const q = this.value.trim().toLowerCase();
+            if (!tbody) return;
+            Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+                const cell = tr.querySelector('td'); // first cell is inmate
+                if (!cell) return;
+                const txt = cell.textContent.trim().toLowerCase();
+                tr.style.display = txt.indexOf(q) !== -1 ? '' : 'none';
+            });
+        }, 150));
+    }
+
+})();
+</script>
 
 <?php
 $conn->close();

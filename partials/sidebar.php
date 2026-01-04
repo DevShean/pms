@@ -85,7 +85,6 @@ $ic_logout = '<svg class="h-5 w-5 opacity-90" fill="none" stroke="currentColor" 
             echo sb_link('../../roles/officer/index.php', 'Dashboard', $ic_home);
             echo sb_link('../../roles/officer/inmates.php', 'Inmates', $ic_users);
             echo sb_link('../../roles/officer/behavior.php', 'Behavior Logs', $ic_note);
-            echo sb_link('../../roles/officer/transfers.php', 'Transfers', $ic_clip);
             break;
 
           case 3: // Medical Staff

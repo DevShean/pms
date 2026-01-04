@@ -53,6 +53,13 @@ include '../../partials/sidebar.php';
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+// Ensure visitations table has a request timestamp column `created_at`.
+// If it doesn't exist, add it (safe to run once).
+$col_check = $conn->query("SHOW COLUMNS FROM `visitations` LIKE 'created_at'");
+if ($col_check && $col_check->num_rows == 0) {
+  $conn->query("ALTER TABLE `visitations` ADD COLUMN `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `relationship`");
+}
+
 // Get visitor's related inmates
 $user_id = $_SESSION['user_id'];
 $visitor = $conn->query("SELECT visitor_id FROM visitors WHERE user_id = $user_id")->fetch_assoc();
@@ -71,13 +78,13 @@ $related_inmates = $conn->query("
 $all_inmates = $conn->query("SELECT inmate_id, first_name, last_name FROM inmates WHERE status='Active' ORDER BY first_name, last_name");
 
 // Fetch visitor's visitation history
-$visitations = $conn->query("
-    SELECT v.*, i.first_name, i.last_name
+$visitations = $conn->query(
+    "SELECT v.*, i.first_name, i.last_name
     FROM visitations v
     INNER JOIN inmates i ON v.inmate_id = i.inmate_id
     WHERE v.visitor_id = $visitor_id
-    ORDER BY v.scheduled_date DESC
-");
+    ORDER BY v.created_at DESC, v.scheduled_date DESC"
+);
 ?>
 
 <main id="content" class="p-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-[calc(100vh-var(--header-h))]">
