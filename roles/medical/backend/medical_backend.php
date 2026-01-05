@@ -1,4 +1,5 @@
 <?php
+require '../../includes/session_check.php';
 include '../../config/config.php';
 
 // Handle update medical record
@@ -55,6 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_full_medical_re
 
     $sql = "UPDATE medical_records SET visit_type='$visit_type', diagnosis='$diagnosis', vital_signs='$vital_signs', blood_pressure='$blood_pressure', temperature_c=" . ($temperature_c !== NULL ? $temperature_c : 'NULL') . ", pulse_rate=" . ($pulse_rate !== NULL ? $pulse_rate : 'NULL') . ", respiratory_rate=" . ($respiratory_rate !== NULL ? $respiratory_rate : 'NULL') . ", treatment='$treatment', medication='$medication', medical_condition='$medical_condition', allergies='$allergies', remarks='$remarks', next_checkup_date=" . ($next_checkup_date ? "'$next_checkup_date'" : 'NULL') . ", hospital_referred='$hospital_referred', attachment_path='$attachment_path', record_date='$record_date' WHERE record_id=$record_id";
     $conn->query($sql);
+    // Log the action
+    $action = "Updated medical record";
+    $details = "Medical record updated for inmate ID $inmate_id.";
+    $user_id = $_SESSION['user_id'];
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     header("Location: medical.php");
     exit();
 }
@@ -82,6 +88,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_medical_record']))
 
     $sql = "INSERT INTO medical_records (inmate_id, staff_id, visit_type, diagnosis, vital_signs, blood_pressure, temperature_c, pulse_rate, respiratory_rate, treatment, medication, medical_condition, allergies, remarks, next_checkup_date, hospital_referred, attachment_path, record_date) VALUES ($inmate_id, $staff_id, '$visit_type', '$diagnosis', '$vital_signs', '$blood_pressure', " . ($temperature_c !== NULL ? $temperature_c : 'NULL') . ", " . ($pulse_rate !== NULL ? $pulse_rate : 'NULL') . ", " . ($respiratory_rate !== NULL ? $respiratory_rate : 'NULL') . ", '$treatment', '$medication', '$medical_condition', '$allergies', '$remarks', " . ($next_checkup_date ? "'$next_checkup_date'" : 'NULL') . ", '$hospital_referred', '$attachment_path', '$record_date')";
     $conn->query($sql);
+
+    // Get inmate name
+    $inmate_result = $conn->query("SELECT first_name, last_name FROM inmates WHERE inmate_id = $inmate_id");
+    $inmate = $inmate_result->fetch_assoc();
+    $inmate_name = $inmate['first_name'] . ' ' . $inmate['last_name'];
+
+    // Log the action
+    $action = "Added medical record";
+    $details = "Medical record added for inmate $inmate_name.";
+    $user_id = $_SESSION['user_id'];
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
+
     header("Location: ../medical/inmates.php");
     exit();
 }

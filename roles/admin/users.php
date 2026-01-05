@@ -47,6 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
                 $response['success'] = true;
                 $response['message'] = 'User added successfully.';
                 $response['user'] = $new_user;
+
+                // Log the action
+                $action = "Added new user";
+                $details = "User $full_name (ID: $new_user_id) added with role $role_id.";
+                $user_id_session = $_SESSION['user_id'] ?? null;
+                $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id_session)");
             } else {
                 $response['message'] = 'Failed to add user.';
             }
@@ -63,9 +69,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
 /* --- Handle user deletion --- */
 if (isset($_GET['delete'])) {
     $delete_id = intval($_GET['delete']);
+    // Get user name for log
+    $user = $conn->query("SELECT full_name FROM users WHERE user_id = $delete_id")->fetch_assoc();
     $stmt = $conn->prepare("DELETE FROM users WHERE user_id = ? AND role_id != 5");
     $stmt->bind_param("i", $delete_id);
     $stmt->execute();
+    // Log the action
+    $action = "Deleted user";
+    $details = "User {$user['full_name']} (ID: $delete_id) deleted.";
+    $user_id_session = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id_session)");
     header("Location: users.php?deleted=1");
     exit;
 }
@@ -78,6 +91,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_password'])) {
     $stmt = $conn->prepare("UPDATE users SET password = ? WHERE user_id = ?");
     $stmt->bind_param("si", $new_password, $user_id);
     $stmt->execute();
+    // Log the action
+    $action = "Reset password";
+    $details = "Password reset for user ID $user_id.";
+    $user_id_session = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id_session)");
     header("Location: users.php?password_reset=1");
     exit;
 }

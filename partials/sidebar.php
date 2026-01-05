@@ -1,5 +1,6 @@
 <?php
 // expects $role_id and $full_name defined by header.php
+include '../../config/config.php';
 
 // Helpers
 if (!function_exists('sb_link')) {
@@ -61,10 +62,12 @@ $ic_logout = '<svg class="h-5 w-5 opacity-90" fill="none" stroke="currentColor" 
       <p class="section-label px-2 mb-2 text-[10px] uppercase tracking-widest text-emerald-300/70">Main Navigation</p>
       <ul class="space-y-1 text-sm">
         <?php
+        // Fetch unread logs count
+        $unread_count = $conn->query("SELECT COUNT(*) as count FROM system_logs WHERE is_read = 0")->fetch_assoc()['count'];
+
         switch ($role_id) {
           case 1: // Administrator
             echo sb_link('../../roles/admin/index.php', 'Dashboard', $ic_home);
-
 
             echo sb_tree_start('Manage Inmates', $ic_users);
             echo sb_link('../../roles/admin/inmates.php', 'View / Manage Inmate Profiles', $ic_clip);
@@ -79,6 +82,19 @@ $ic_logout = '<svg class="h-5 w-5 opacity-90" fill="none" stroke="currentColor" 
             echo sb_link('../../roles/admin/medical.php', 'Medical Records', $ic_med);
             echo sb_link('../../roles/admin/users.php', 'Users & Roles', $ic_users2);
             echo sb_link('../../roles/admin/visitation.php', 'Visitations', $ic_cal);
+
+            // System Logs dropdown below visitation
+            $logs_label = 'System Logs' . ($unread_count > 0 ? " <span class='bg-red-500 text-white text-xs px-2 py-1 rounded'>$unread_count</span>" : '');
+            echo sb_tree_start($logs_label, $ic_note);
+            echo sb_link('../../roles/admin/logs.php', 'View Logs', $ic_clip);
+            if ($unread_count > 0) {
+              // Fetch recent logs
+              $recent_logs = $conn->query("SELECT action, details, created_at FROM system_logs WHERE is_read = 0 ORDER BY created_at DESC LIMIT 5");
+              while ($log = $recent_logs->fetch_assoc()) {
+                echo '<li class="pl-6 py-1 text-xs text-emerald-200">' . htmlspecialchars($log['action']) . ': ' . htmlspecialchars(substr($log['details'], 0, 50)) . '...</li>';
+              }
+            }
+            echo $tree_end;
             break;
 
           case 2: // Correctional Officer

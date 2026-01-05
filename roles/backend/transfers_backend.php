@@ -6,6 +6,11 @@ include '../../config/config.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_id'])) {
     $id = intval($_POST['delete_id']);
     $conn->query("DELETE FROM transfers WHERE transfer_id = $id");
+    // Log the action
+    $action = "Deleted transfer";
+    $details = "Transfer ID $id deleted.";
+    $user_id = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     header("Location: transfers.php");
     exit();
 }
@@ -20,6 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_transfer'])) {
 
     $sql = "INSERT INTO transfers (inmate_id, from_block, to_block, transfer_date, approved_by) VALUES ($inmate_id, '$from_block', '$to_block', '$transfer_date', $approved_by)";
     $conn->query($sql);
+    // Log the action
+    $action = "Added transfer";
+    $details = "Transfer added for inmate ID $inmate_id from $from_block to $to_block.";
+    $user_id = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     header("Location: transfers.php");
     exit();
 }
@@ -35,6 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_transfer'])) {
 
     $sql = "UPDATE transfers SET inmate_id=$inmate_id, from_block='$from_block', to_block='$to_block', transfer_date='$transfer_date', approved_by=$approved_by WHERE transfer_id=$id";
     $conn->query($sql);
+    // Log the action
+    $action = "Updated transfer";
+    $details = "Transfer ID $id updated.";
+    $user_id = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     header("Location: transfers.php");
     exit();
 }

@@ -20,6 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $sql = "INSERT INTO programs (program_name, program_type, description, start_date, end_date, duration_weeks, capacity, location, assigned_staff_id, requirements) VALUES ('$program_name', '$program_type', '$description', '$start_date', '$end_date', $duration_weeks, $capacity, '$location', $assigned_staff_id, '$requirements')";
         $conn->query($sql);
+        // Log the action
+        $program_id = $conn->insert_id;
+        $action = "Added new program";
+        $details = "Program $program_name (ID: $program_id) added.";
+        $user_id = $_SESSION['user_id'] ?? null;
+        $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     } elseif (isset($_POST['update_program'])) {
         $program_id = intval($_POST['program_id']);
         $program_name = $conn->real_escape_string($_POST['program_name']);
@@ -36,9 +42,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $sql = "UPDATE programs SET program_name='$program_name', program_type='$program_type', description='$description', start_date='$start_date', end_date='$end_date', duration_weeks=$duration_weeks, capacity=$capacity, location='$location', assigned_staff_id=$assigned_staff_id, status='$status', requirements='$requirements' WHERE program_id=$program_id";
         $conn->query($sql);
+        // Log the action
+        $action = "Updated program";
+        $details = "Program $program_name (ID: $program_id) updated.";
+        $user_id = $_SESSION['user_id'] ?? null;
+        $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     } elseif (isset($_POST['delete_program'])) {
         $program_id = intval($_POST['delete_program']);
+        // Get program name for log
+        $program = $conn->query("SELECT program_name FROM programs WHERE program_id=$program_id")->fetch_assoc();
+        // First, delete associated inmate_programs to avoid foreign key constraint
+        $conn->query("DELETE FROM inmate_programs WHERE program_id=$program_id");
         $conn->query("DELETE FROM programs WHERE program_id=$program_id");
+        // Log the action
+        $action = "Deleted program";
+        $details = "Program {$program['program_name']} (ID: $program_id) deleted.";
+        $user_id = $_SESSION['user_id'] ?? null;
+        $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     } elseif (isset($_POST['assign_inmate'])) {
         $inmate_ids = $_POST['inmate_id']; // array
         $program_id = intval($_POST['program_id']);
@@ -59,6 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $sql = "INSERT INTO inmate_programs (inmate_id, program_id, staff_id, start_date) VALUES ($inmate_id, $program_id, $staff_id, '$start_date')";
             $conn->query($sql);
             $assigned++;
+        }
+        if ($assigned > 0) {
+            // Log the action
+            $action = "Assigned inmates to program";
+            $details = "$assigned inmate(s) assigned to program ID $program_id.";
+            $user_id = $_SESSION['user_id'] ?? null;
+            $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
         }
     }
 }

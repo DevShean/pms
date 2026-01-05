@@ -15,6 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_progress'])) {
 
     $sql = "UPDATE inmate_programs SET progress='$progress', end_date=" . ($end_date ? "'$end_date'" : "NULL") . " WHERE inmate_program_id=$inmate_program_id";
     $conn->query($sql);
+    // Log the action
+    $action = "Updated program progress";
+    $details = "Progress updated to $progress for inmate program ID $inmate_program_id.";
+    $user_id = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     header("Location: progress.php");
     exit();
 }

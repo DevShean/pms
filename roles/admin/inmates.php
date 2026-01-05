@@ -355,7 +355,7 @@ include '../../partials/sidebar.php';
         <!-- Crime & Sentencing -->
         <h4 class="md:col-span-2 text-sm font-semibold text-slate-700 mt-3">Crime & Sentencing</h4>
         <textarea name="crime" placeholder="Crime" required class="md:col-span-2 rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
-        <input type="number" name="sentence_years" placeholder="Sentence Years" required class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+        <input type="number" name="sentence_years" id="sentence_years" placeholder="Sentence Years" required class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
         <textarea name="court_details" placeholder="Court Details" class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
 
         <!-- Legal Case Information -->
@@ -375,8 +375,8 @@ include '../../partials/sidebar.php';
         <!-- Incarceration Details -->
         <h4 class="md:col-span-2 text-sm font-semibold text-slate-700 mt-3">Incarceration Details</h4>
         <input type="text" name="cell_block" placeholder="Cell Block" class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-        <input type="date" name="admission_date" placeholder="Admission Date" required class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-        <input type="date" name="release_date" placeholder="Release Date" class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+        <input type="date" name="admission_date" id="admission_date" placeholder="Admission Date" required class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+        <input type="date" name="release_date" id="release_date" placeholder="Release Date" readonly class="rounded-lg border border-slate-300 px-3 py-2 bg-slate-50 cursor-not-allowed focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
         <select name="status" required class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
           <option value="">Select Status</option>
           <option value="Active">Active</option>
@@ -634,7 +634,7 @@ include '../../partials/sidebar.php';
         <h4 class="md:col-span-2 text-sm font-semibold text-slate-700 mt-3">Incarceration Details</h4>
         <input type="text" name="edit_cell_block" id="edit-cell" placeholder="Cell Block" class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
         <input type="date" name="edit_admission_date" id="edit-admission" required class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-        <input type="date" name="edit_release_date" id="edit-release" class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        <input type="date" name="edit_release_date" id="edit-release" readonly class="rounded-lg border border-slate-300 px-3 py-2 bg-slate-50 cursor-not-allowed focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
         <select name="edit_status" id="edit-status" required class="rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
           <option value="">Select Status</option>
           <option value="Active">Active</option>
@@ -928,19 +928,40 @@ document.querySelectorAll('.viewBtn').forEach(btn => {
   // Initialize pagination on page load
   if (rows.length > 0) displayPage(1);
 
+  // =============================
+  // AUTO-CALCULATE RELEASE DATE
+  // =============================
+  function calculateReleaseDate(admissionDate, sentenceYears) {
+    if (!sentenceYears) return '';
+    const admission = admissionDate ? new Date(admissionDate) : new Date();
+    admission.setFullYear(admission.getFullYear() + parseInt(sentenceYears));
+    return admission.toISOString().split('T')[0];
+  }
+
+  function updateReleaseDate(admissionFieldId, sentenceFieldId, releaseFieldId) {
+    const admissionField = document.getElementById(admissionFieldId);
+    const sentenceField = document.getElementById(sentenceFieldId);
+    const releaseField = document.getElementById(releaseFieldId);
+
+    if (admissionField && sentenceField && releaseField) {
+      const admissionDate = admissionField.value;
+      const sentenceYears = sentenceField.value;
+      const releaseDate = calculateReleaseDate(admissionDate, sentenceYears);
+      releaseField.value = releaseDate;
+      console.log('Updated release date:', releaseDate); // Debug log
+    }
+  }
+
+  // Add event listeners for add modal
+  document.getElementById('admission_date')?.addEventListener('change', () => updateReleaseDate('admission_date', 'sentence_years', 'release_date'));
+  document.getElementById('sentence_years')?.addEventListener('input', () => updateReleaseDate('admission_date', 'sentence_years', 'release_date'));
+  document.getElementById('sentence_years')?.addEventListener('change', () => updateReleaseDate('admission_date', 'sentence_years', 'release_date'));
+
+  // Add event listeners for edit modal
+  document.getElementById('edit-admission')?.addEventListener('change', () => updateReleaseDate('edit-admission', 'edit-sentence', 'edit-release'));
+  document.getElementById('edit-sentence')?.addEventListener('input', () => updateReleaseDate('edit-admission', 'edit-sentence', 'edit-release'));
+  document.getElementById('edit-sentence')?.addEventListener('change', () => updateReleaseDate('edit-admission', 'edit-sentence', 'edit-release'));
+
 </script>
 
 <?php include '../../partials/footer.php'; ?>
-
-
-
-
-
-
-
-
-
-
-
-
-

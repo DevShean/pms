@@ -5,7 +5,14 @@ include '../../config/config.php';
 // Handle delete action
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_id'])) {
     $id = intval($_POST['delete_id']);
+    // Get inmate name for log
+    $inmate = $conn->query("SELECT first_name, last_name FROM inmates WHERE inmate_id = $id")->fetch_assoc();
     $conn->query("DELETE FROM inmates WHERE inmate_id = $id");
+    // Log the action
+    $action = "Deleted inmate";
+    $details = "Inmate {$inmate['first_name']} {$inmate['last_name']} (ID: $id) deleted.";
+    $user_id = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     header("Location: inmates.php");
     exit();
 }
@@ -46,7 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_inmate'])) {
     $court_details = $conn->real_escape_string($_POST['court_details']);
     $cell_block = $conn->real_escape_string($_POST['cell_block']);
     $admission_date = $_POST['admission_date'];
-    $release_date = $_POST['release_date'] ?? null;
+    // Automatic calculation of release_date
+    $admission_date_obj = new DateTime($admission_date);
+    $admission_date_obj->add(new DateInterval('P' . $sentence_years . 'Y'));
+    $release_date = $admission_date_obj->format('Y-m-d');
     $status = $_POST['status'];
     $contact_number = $conn->real_escape_string($_POST['contact_number'] ?? '');
     $return_rate = $conn->real_escape_string($_POST['return_rate'] ?? '');
@@ -80,9 +90,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_inmate'])) {
     $release_date_sql = is_null($release_date) || $release_date === '' ? 'NULL' : "'$release_date'";
     $date_time_received_sql = is_null($date_time_received) || $date_time_received === '' ? 'NULL' : "'$date_time_received'";
 
-    $sql = "INSERT INTO inmates (first_name, last_name, birthdate, place_of_birth, gender, marital_status, height, weight, hair_description, complexion, eyes_description, citizenship, religion, race, occupation, educational_attainment, course, school_attended, permanent_address, provincial_address, no_of_children, father_name, father_address, mother_name, mother_address, wife_clw_name, wife_clw_address, relative_name, relative_address, crime, sentence_years, court_details, cell_block, admission_date, release_date, status, photo_path, contact_number, return_rate, date_time_received, turned_over_by, receiving_duty_officer, offense_charged, criminal_case_number, case_court, case_status, prisoner_property, property_receipt_number) 
+    $sql = "INSERT INTO inmates (first_name, last_name, birthdate, place_of_birth, gender, marital_status, height, weight, hair_description, complexion, eyes_description, citizenship, religion, race, occupation, educational_attainment, course, school_attended, permanent_address, provincial_address, no_of_children, father_name, father_address, mother_name, mother_address, wife_clw_name, wife_clw_address, relative_name, relative_address, crime, sentence_years, court_details, cell_block, admission_date, release_date, status, photo_path, contact_number, return_rate, date_time_received, turned_over_by, receiving_duty_officer, offense_charged, criminal_case_number, case_court, case_status, prisoner_property, property_receipt_number)
     VALUES ('$first_name', '$last_name', '$birthdate', '$place_of_birth', '$gender', '$marital_status', '$height', '$weight', '$hair_description', '$complexion', '$eyes_description', '$citizenship', '$religion', '$race', '$occupation', '$educational_attainment', '$course', '$school_attended', '$permanent_address', '$provincial_address', $no_of_children_sql, '$father_name', '$father_address', '$mother_name', '$mother_address', '$wife_clw_name', '$wife_clw_address', '$relative_name', '$relative_address', '$crime', $sentence_years, '$court_details', '$cell_block', '$admission_date', $release_date_sql, '$status', '$photo_path', '$contact_number', '$return_rate', $date_time_received_sql, '$turned_over_by', '$receiving_duty_officer', '$offense_charged', '$criminal_case_number', '$case_court', '$case_status', '$prisoner_property', '$property_receipt_number')";
     $conn->query($sql);
+
+    // Log the action
+    $inmate_id = $conn->insert_id;
+    $action = "Added new inmate";
+    $details = "Inmate $first_name $last_name (ID: $inmate_id) added with $sentence_years year sentence.";
+    $user_id = $_SESSION['user_id'] ?? null; // Assuming session has user_id
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
+
     header("Location: inmates.php");
     exit();
 }
@@ -124,7 +142,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_inmate'])) {
     $court_details = $conn->real_escape_string($_POST['edit_court_details']);
     $cell_block = $conn->real_escape_string($_POST['edit_cell_block']);
     $admission_date = $_POST['edit_admission_date'];
-    $release_date = $_POST['edit_release_date'] ?? null;
+    // Automatic calculation of release_date
+    $admission_date_obj = new DateTime($admission_date);
+    $admission_date_obj->add(new DateInterval('P' . $sentence_years . 'Y'));
+    $release_date = $admission_date_obj->format('Y-m-d');
     $status = $_POST['edit_status'];
     $contact_number = $conn->real_escape_string($_POST['edit_contact_number'] ?? '');
     $return_rate = $conn->real_escape_string($_POST['edit_return_rate'] ?? '');
@@ -160,6 +181,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_inmate'])) {
 
     $sql = "UPDATE inmates SET first_name='$first_name', last_name='$last_name', birthdate='$birthdate', place_of_birth='$place_of_birth', gender='$gender', marital_status='$marital_status', height='$height', weight='$weight', hair_description='$hair_description', complexion='$complexion', eyes_description='$eyes_description', citizenship='$citizenship', religion='$religion', race='$race', occupation='$occupation', educational_attainment='$educational_attainment', course='$course', school_attended='$school_attended', permanent_address='$permanent_address', provincial_address='$provincial_address', no_of_children=$no_of_children_sql, father_name='$father_name', father_address='$father_address', mother_name='$mother_name', mother_address='$mother_address', wife_clw_name='$wife_clw_name', wife_clw_address='$wife_clw_address', relative_name='$relative_name', relative_address='$relative_address', crime='$crime', sentence_years=$sentence_years, court_details='$court_details', cell_block='$cell_block', admission_date='$admission_date', release_date=$release_date_sql, status='$status', photo_path='$photo_path', contact_number='$contact_number', return_rate='$return_rate', date_time_received=$date_time_received_sql, turned_over_by='$turned_over_by', receiving_duty_officer='$receiving_duty_officer', offense_charged='$offense_charged', criminal_case_number='$criminal_case_number', case_court='$case_court', case_status='$case_status', prisoner_property='$prisoner_property', property_receipt_number='$property_receipt_number' WHERE inmate_id=$id";
     $conn->query($sql);
+    // Log the action
+    $action = "Updated inmate";
+    $details = "Inmate $first_name $last_name (ID: $id) updated.";
+    $user_id = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     header("Location: inmates.php");
     exit();
 }
@@ -176,6 +202,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_medical_record']))
 
     $sql = "INSERT INTO medical_records (inmate_id, staff_id, visit_type, record_date) VALUES ($inmate_id, $staff_id, '$visit_type', '$record_date')";
     $conn->query($sql);
+    // Log the action
+    $action = "Added medical record";
+    $details = "Medical record for inmate ID $inmate_id added with visit type $visit_type.";
+    $user_id = $_SESSION['user_id'] ?? null;
+    $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
     header("Location: inmates.php");
     exit();
 }

@@ -47,6 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
                 $response['success'] = true;
                 $response['message'] = 'User added successfully.';
                 $response['user'] = $new_user;
+
+                // Log the action
+                $action = "Added new user";
+                $details = "User $full_name (ID: $new_user_id) added with role $role_id.";
+                $user_id = $_SESSION['user_id'] ?? null;
+                $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
             } else {
                 $response['message'] = 'Failed to add user.';
             }

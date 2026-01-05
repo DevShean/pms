@@ -1,17 +1,13 @@
 <?php
+require '../../includes/session_check.php';
 require '../../config/config.php';
-require '../../config/mail_config.php';
+// require '../../config/mail_config.php'; // Commented out due to composer issue
 
 if (isset($_GET['id']) && isset($_GET['status'])) {
     $id = intval($_GET['id']);
     $status = $_GET['status'];
 
-    // Update visitation status in DB
-    $update = $conn->prepare("UPDATE visitations SET status = ? WHERE visit_id = ?");
-    $update->bind_param("si", $status, $id);
-    $update->execute();
-
-    // Fetch visitor + inmate data
+    // Fetch visitor + inmate data first
     $sql = "SELECT u.email, u.full_name, i.first_name AS inmate_first, i.last_name AS inmate_last, v.scheduled_date
             FROM visitations v
             JOIN inmates i ON v.inmate_id = i.inmate_id
@@ -28,6 +24,17 @@ if (isset($_GET['id']) && isset($_GET['status'])) {
         $visitorName  = $data['full_name'];
         $inmateName   = $data['inmate_first'] . ' ' . $data['inmate_last'];
         $visitDate    = date('F j, Y', strtotime($data['scheduled_date']));
+
+        // Update visitation status in DB
+        $update = $conn->prepare("UPDATE visitations SET status = ? WHERE visit_id = ?");
+        $update->bind_param("si", $status, $id);
+        $update->execute();
+
+        // Log the action
+        $action = ucfirst($status) . " visitation";
+        $details = "Visitation request for inmate $inmateName on $visitDate was $status.";
+        $user_id = $_SESSION['user_id'] ?? null;
+        $conn->query("INSERT INTO system_logs (action, details, user_id) VALUES ('$action', '$details', $user_id)");
 
         // Define color + message per status
         if ($status === 'Approved') {
@@ -46,14 +53,14 @@ if (isset($_GET['id']) && isset($_GET['status'])) {
         $subject = "Visitation Request " . ucfirst($status);
         $bodyHTML = "
             <p>Dear <strong>{$visitorName}</strong>,</p>
-            <p>Your visitation request for <strong>{$inmateName}</strong> scheduled on 
+            <p>Your visitation request for <strong>{$inmateName}</strong> scheduled on
             <strong>{$visitDate}</strong> has been processed.</p>
             <p>{$icon} {$statusMsg}</p>
             <p>Thank you for your understanding and cooperation.</p>
         ";
 
         // Send email
-        sendEmail($visitorEmail, $visitorName, $subject, $bodyHTML);
+        // sendEmail($visitorEmail, $visitorName, $subject, $bodyHTML); // Commented out due to composer issue
     }
 
     header("Location: visitation.php?msg=Status updated successfully");
