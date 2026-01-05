@@ -167,24 +167,6 @@ $role_id   = $_SESSION['role_id'] ?? null; // role_label() is defined in header.
           </svg>
         </span>
       </a>
-
-      <a href="profile.php" class="group block rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-yellow-300">
-        <div class="flex items-center mb-4">
-          <div class="flex-shrink-0">
-            <svg class="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-          </div>
-          <h2 class="ml-4 text-xl font-semibold text-slate-800 group-hover:text-yellow-600">My Profile</h2>
-        </div>
-        <p class="text-slate-600 mb-4">Update your profile information.</p>
-        <span class="inline-flex items-center text-sm font-medium text-yellow-700 group-hover:text-yellow-800 group-hover:underline">
-          Go to Profile
-          <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-          </svg>
-        </span>
-      </a>
     </div>
   </div>
 </main>

@@ -101,7 +101,7 @@ $role_id   = $_SESSION['role_id'] ?? null; // role_label() is defined in header.
         </span>
       </a>
 
-      <a href="manage_users.php" class="group block rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-green-300">
+      <a href="users.php" class="group block rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-green-300">
         <div class="flex items-center mb-4">
           <div class="flex-shrink-0">
             <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

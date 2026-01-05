@@ -24,7 +24,7 @@ $sql = "SELECT v.*,
         JOIN inmates i ON v.inmate_id = i.inmate_id
         JOIN visitors vis ON v.visitor_id = vis.visitor_id
         JOIN users u ON vis.user_id = u.user_id
-        ORDER BY v.scheduled_date DESC
+        ORDER BY v.scheduled_date ASC
         LIMIT $limit OFFSET $offset";
 
 $result = $conn->query($sql);
